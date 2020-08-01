@@ -23,7 +23,7 @@ class WindowClass(QMainWindow, form_class):
         self.ori_img = QPixmap()
         self.level = 0
 
-        self.lvlT.setText("30")
+        self.lvlT.setText(str(self.lvlSlider.value()))
 
         self.lvlSlider.valueChanged.connect(self.show_slider_lvl)
         self.lvlSlider.valueChanged.connect(self.make_bookmark)
