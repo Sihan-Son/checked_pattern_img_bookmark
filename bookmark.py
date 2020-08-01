@@ -3,8 +3,9 @@
 
 import sys
 from PyQt5.QtWidgets import *
-from PyQt5 import uic
+from PyQt5 import uic, QtGui
 from PyQt5.QtGui import QPixmap
+
 from utils import *
 import cv2
 
@@ -20,29 +21,52 @@ class WindowClass(QMainWindow, form_class):
         self.setupUi(self)
 
         self.ori_img = QPixmap()
-        self.btnOpen.clicked.connect(self.open_Image)
-        self.btnSave.clicked.connect(self.save_Image)
+        self.level = 0
 
+        self.lvlT.setText("30")
 
-    def open_Image(self):
-        fname = QFileDialog.getOpenFileName(self)
-        print(fname)
-        self.filePath.setText(fname[0])
+        self.lvlSlider.valueChanged.connect(self.show_slider_lvl)
+        self.lvlSlider.valueChanged.connect(self.make_bookmark)
 
-        self.ori_img.load(fname[0])
+        self.btnOpen.clicked.connect(self.open_image)
+        self.btnSave.clicked.connect(self.save_image)
+        self.btnShow.clicked.connect(self.show_big)
+
+    def open_image(self):
+        self.file_name = QFileDialog.getOpenFileName(self, "Open Image File", ".", "Image files (*.jpg )")
+        self.filePath.setText(self.file_name[0])
+
+        self.make_bookmark()
+
+    def save_image(self):
+        save_file_Name = QFileDialog.getSaveFileName(self, "Save File", "", "Image files (*.jpg )")
+        cv2.imwrite(save_file_Name[0], self.img)
+
+    def make_bookmark(self):
+        self.level = self.lvlSlider.value()
+
+        self.ori_img.load(self.file_name[0])
         self.ori_img = self.ori_img.scaledToHeight(200)
         self.lblOri.setPixmap(self.ori_img)
 
-        checked = cv2.imread(fname[0])
-        self.img = cut_shuffle_img(checked, 30)
+        checked = cv2.imread(self.file_name[0])
+        self.img = cut_shuffle_img(checked, self.level)
+
+        height, width, channel = self.img.shape
+        bgr_set = cv2.cvtColor(self.img, cv2.COLOR_BGR2RGB)
+        set_img = QtGui.QImage(bgr_set, width, height, width * channel, QtGui.QImage.Format_RGB888)
+        pixmap = QtGui.QPixmap.fromImage(set_img)
+        st = pixmap.scaledToHeight(200)
+
+        self.lblOri2.setPixmap(st)
+
+    def show_slider_lvl(self):
+        self.lvlT.setText(str(self.lvlSlider.value()))
+
+    def show_big(self):
         cv2.imshow('Check Pattern Book Marker', self.img)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
-
-    def save_Image(self):
-        cv2.imwrite('./ch.jpg', self.img)
-
-
 
 
 if __name__ == "__main__":
